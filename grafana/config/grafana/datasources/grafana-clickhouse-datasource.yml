@@ -3,7 +3,7 @@ datasources:
   - name: clickhouse
     type: grafana-clickhouse-datasource
     jsonData:
-      defaultDatabase: docker_private
+      defaultDatabase: default
       port: 9000
       server: clickhouse
       username: default
