@@ -1,0 +1,175 @@
+name: udc-kafka
+services:
+  kafka0:
+    image: confluentinc/cp-kafka:7.4.0
+    hostname: kafka0
+    container_name: kafka0
+    environment:
+      KAFKA_NODE_ID: 0
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://kafka0:29092,PLAINTEXT_HOST://localhost:9092'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_NUM_PARTITIONS: 3
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_JMX_PORT: 9101
+      KAFKA_JMX_HOSTNAME: kafka0
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '0@kafka0:29093,1@kafka1:29093,2@kafka2:29093'
+      KAFKA_LISTENERS: 'PLAINTEXT://kafka0:29092,CONTROLLER://kafka0:29093,PLAINTEXT_HOST://0.0.0.0:9092'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_LOG_RETENTION_HOURS: 24
+      KAFKA_LOG_RETENTION_BYTES: 1000000000
+      CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
+    healthcheck:
+      test: ["CMD", "/bin/bash", "-c", "nc -z localhost 9092"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    volumes:
+      - kafka0-data:/var/lib/kafka/data
+    networks:
+      - udc
+  kafka1:
+    image: confluentinc/cp-kafka:7.4.0
+    hostname: kafka1
+    container_name: kafka1
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://kafka1:29092,PLAINTEXT_HOST://localhost:9092'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_NUM_PARTITIONS: 3
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_JMX_PORT: 9101
+      KAFKA_JMX_HOSTNAME: kafka1
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '0@kafka0:29093,1@kafka1:29093,2@kafka2:29093'
+      KAFKA_LISTENERS: 'PLAINTEXT://kafka1:29092,CONTROLLER://kafka1:29093,PLAINTEXT_HOST://0.0.0.0:9092'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_LOG_RETENTION_HOURS: 24
+      KAFKA_LOG_RETENTION_BYTES: 1000000000
+      CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
+    healthcheck:
+      test: ["CMD", "/bin/bash", "-c", "nc -z localhost 9092"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    volumes:
+      - kafka1-data:/var/lib/kafka/data
+    networks:
+      - udc
+  kafka2:
+    image: confluentinc/cp-kafka:7.4.0
+    hostname: kafka2
+    container_name: kafka2
+    environment:
+      KAFKA_NODE_ID: 2
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://kafka2:29092,PLAINTEXT_HOST://localhost:9092'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_NUM_PARTITIONS: 3
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_JMX_PORT: 9101
+      KAFKA_JMX_HOSTNAME: kafka2
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '0@kafka0:29093,1@kafka1:29093,2@kafka2:29093'
+      KAFKA_LISTENERS: 'PLAINTEXT://kafka2:29092,CONTROLLER://kafka2:29093,PLAINTEXT_HOST://0.0.0.0:9092'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_LOG_RETENTION_HOURS: 24
+      KAFKA_LOG_RETENTION_BYTES: 1000000000
+      CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
+    healthcheck:
+      test: ["CMD", "/bin/bash", "-c", "nc -z localhost 9092"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    volumes:
+      - kafka2-data:/var/lib/kafka/data
+    networks:
+      - udc
+
+  kafka-proxy:
+    image: traefik:latest
+    container_name: kafka-proxy
+    hostname: kafka-proxy
+    ports:
+      - "80:80"
+      - "8081:8080"
+      - "9092:9092"
+    command:
+      - --ping=true
+      - --api.dashboard=true
+      - --api.insecure=true
+      - --providers.file.directory=/etc/traefik
+      - --providers.file.watch=true
+      - --entrypoints.kafka-ui-entrypoint.address=:80
+      - --entrypoints.kafka-entrypoint.address=:9092
+      - --accesslog=true
+      - --log.level=WARN # DEBUG, INFO, WARN, ERROR, FATAL, PANIC
+    healthcheck:
+      test: [ "CMD-SHELL", "traefik healthcheck --ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+    volumes:
+      - ./config/traefik:/etc/traefik
+    networks:
+      - udc
+    depends_on:
+      kafka0:
+        condition: service_healthy
+      kafka1:
+        condition: service_healthy
+      kafka2:
+        condition: service_healthy
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    environment:
+      SERVER_SERVLET_CONTEXT_PATH: /kafka-ui
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka0:29092,kafka1:29092,kafka2:29092
+      KAFKA_CLUSTERS_0_METRICS_PORT: 9101
+    depends_on:
+      kafka0:
+        condition: service_healthy
+      kafka1:
+        condition: service_healthy
+      kafka2:
+        condition: service_healthy
+    networks:
+      - udc
+
+volumes:
+  kafka0-data:
+    name: "kafka0-data"
+  kafka1-data:
+    name: "kafka1-data"
+  kafka2-data:
+    name: "kafka02-data"
+
+networks:
+  udc:
+    name: udc
+    ipam:
+      config:
+        - subnet: 172.23.0.0/24

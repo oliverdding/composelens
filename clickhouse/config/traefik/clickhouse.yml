@@ -1,0 +1,31 @@
+http:
+  routers:
+    clickhouse-http:
+      entrypoints:
+        - clickhouse-http
+      rule: "PathPrefix(`/`)"
+      service: clickhouse-http
+  services:
+    clickhouse-http:
+      loadBalancer:
+        servers:
+          - url: http://clickhouse0:8123
+          - url: http://clickhouse1:8123
+          - url: http://clickhouse2:8123
+          - url: http://clickhouse3:8123
+
+tcp:
+  routers:
+    clickhouse-tcp:
+      entryPoints:
+        - clickhouse-tcp
+      rule: HostSNI(`*`)
+      service: clickhouse-tcp
+  services:
+    clickhouse-tcp:
+      loadBalancer:
+        servers:
+          - address: "clickhouse0:9000"
+          - address: "clickhouse1:9000"
+          - address: "clickhouse2:9000"
+          - address: "clickhouse3:9000"

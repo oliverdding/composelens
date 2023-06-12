@@ -1,0 +1,12 @@
+http:
+  routers:
+    kafkaui-router:
+      rule: "PathPrefix(`/kafka-ui`)"
+      entrypoints:
+        - kafka-ui-entrypoint
+      service: kafkaui-service
+  services:
+    kafkaui-service:
+      loadBalancer:
+        servers:
+          - url: http://kafka-ui:8080

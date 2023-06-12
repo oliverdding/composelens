@@ -1,0 +1,14 @@
+tcp:
+  routers:
+    kafka-tcp-router:
+      entryPoints:
+        - kafka-entrypoint
+      rule: HostSNI(`*`)
+      service: kafka-service
+  services:
+    kafka-service:
+      loadBalancer:
+        servers:
+          - address: "kafka0:9092"
+          - address: "kafka1:9092"
+          - address: "kafka2:9092"

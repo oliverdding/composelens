@@ -1,0 +1,11 @@
+http:
+  routers:
+    grafana-router:
+      rule: "PathPrefix(`/grafana`)"
+      entrypoints: web
+      service: grafana-service
+  services:
+    grafana-service:
+      loadBalancer:
+        servers:
+          - url: http://grafana:3000

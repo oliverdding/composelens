@@ -1,0 +1,216 @@
+x-clickhouse-logger-level: &clickhouse-logger-level information
+x-clickhouse-deploy-resources: &clickhouse-deploy-resources
+      resources:
+        limits:
+          cpus: '4'
+          memory: 10G
+
+name: udc-clickhouse
+services:
+  clickhouse0:
+    image: 'docker.io/clickhouse/clickhouse-server:23.4-alpine'
+    container_name: clickhouse0
+    hostname: clickhouse0
+    ulimits:
+      nproc: 65535
+      nofile:
+        soft: 262144
+        hard: 262144
+    deploy: *clickhouse-deploy-resources
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q localhost:8123/ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+    networks:
+      - udc
+    environment:
+      CLICKHOUSE_SERVER_ID: 0
+      CLICKHOUSE_SHARD: 0
+      CLICKHOUSE_REPLICA: 0
+      CLICKHOUSE_LOG_TO_CONSOLE: 0
+      CLICKHOUSE_LOG_LEVEL: *clickhouse-logger-level
+      CLICKHOUSE_LOG_QUERIES: 1
+      CLICKHOUSE_LOG_QUERY_THREADS: 0
+      CLICKHOUSE_LOG_QUERY_VIEWS: 0
+    volumes:
+      - ./config/clickhouse:/etc/clickhouse-server
+      - clickhouse0-data:/var/lib/clickhouse
+      - clickhouse0-log:/var/log/clickhouse-server
+    cap_add:
+      - SYS_NICE
+      - NET_ADMIN
+      - IPC_LOCK
+      - SYS_PTRACE
+  clickhouse1:
+    image: 'docker.io/clickhouse/clickhouse-server:23.4-alpine'
+    container_name: clickhouse1
+    hostname: clickhouse1
+    ulimits:
+      nproc: 65535
+      nofile:
+        soft: 262144
+        hard: 262144
+    deploy: *clickhouse-deploy-resources
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q localhost:8123/ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+    networks:
+      - udc
+    environment:
+      CLICKHOUSE_SERVER_ID: 1
+      CLICKHOUSE_SHARD: 0
+      CLICKHOUSE_REPLICA: 1
+      CLICKHOUSE_LOG_TO_CONSOLE: 0
+      CLICKHOUSE_LOG_LEVEL: *clickhouse-logger-level
+      CLICKHOUSE_LOG_QUERIES: 1
+      CLICKHOUSE_LOG_QUERY_THREADS: 0
+      CLICKHOUSE_LOG_QUERY_VIEWS: 0
+    volumes:
+      - ./config/clickhouse:/etc/clickhouse-server
+      - clickhouse1-data:/var/lib/clickhouse
+      - clickhouse1-log:/var/log/clickhouse-server
+    cap_add:
+      - SYS_NICE
+      - NET_ADMIN
+      - IPC_LOCK
+      - SYS_PTRACE
+  clickhouse2:
+    image: 'docker.io/clickhouse/clickhouse-server:23.4-alpine'
+    container_name: clickhouse2
+    hostname: clickhouse2
+    ulimits:
+      nproc: 65535
+      nofile:
+        soft: 262144
+        hard: 262144
+    deploy: *clickhouse-deploy-resources
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q localhost:8123/ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+    networks:
+      - udc
+    environment:
+      CLICKHOUSE_SERVER_ID: 2
+      CLICKHOUSE_SHARD: 1
+      CLICKHOUSE_REPLICA: 0
+      CLICKHOUSE_LOG_TO_CONSOLE: 0
+      CLICKHOUSE_LOG_LEVEL: *clickhouse-logger-level
+      CLICKHOUSE_LOG_QUERIES: 1
+      CLICKHOUSE_LOG_QUERY_THREADS: 0
+      CLICKHOUSE_LOG_QUERY_VIEWS: 0
+    volumes:
+      - ./config/clickhouse:/etc/clickhouse-server
+      - clickhouse2-data:/var/lib/clickhouse
+      - clickhouse2-log:/var/log/clickhouse-server
+    cap_add:
+      - SYS_NICE
+      - NET_ADMIN
+      - IPC_LOCK
+      - SYS_PTRACE
+  clickhouse3:
+    image: 'docker.io/clickhouse/clickhouse-server:23.4-alpine'
+    container_name: clickhouse3
+    hostname: clickhouse3
+    ulimits:
+      nproc: 65535
+      nofile:
+        soft: 262144
+        hard: 262144
+    deploy: *clickhouse-deploy-resources
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q localhost:8123/ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+    networks:
+      - udc
+    environment:
+      CLICKHOUSE_SERVER_ID: 3
+      CLICKHOUSE_SHARD: 1
+      CLICKHOUSE_REPLICA: 1
+      CLICKHOUSE_LOG_TO_CONSOLE: 0
+      CLICKHOUSE_LOG_LEVEL: *clickhouse-logger-level
+      CLICKHOUSE_LOG_QUERIES: 1
+      CLICKHOUSE_LOG_QUERY_THREADS: 0
+      CLICKHOUSE_LOG_QUERY_VIEWS: 0
+    volumes:
+      - ./config/clickhouse:/etc/clickhouse-server
+      - clickhouse3-data:/var/lib/clickhouse
+      - clickhouse3-log:/var/log/clickhouse-server
+    cap_add:
+      - SYS_NICE
+      - NET_ADMIN
+      - IPC_LOCK
+      - SYS_PTRACE
+
+  clickhouse-proxy:
+    image: traefik:latest
+    container_name: clickhouse-proxy
+    hostname: clickhouse-proxy
+    ports:
+      - "8123:8123"
+      - "8080:8080"
+      - "9000:9000"
+    command:
+      - --ping=true
+      - --api.dashboard=true
+      - --api.insecure=true
+      - --providers.file.directory=/etc/traefik
+      - --providers.file.watch=true
+      - --entrypoints.clickhouse-http.address=:8123
+      - --entrypoints.clickhouse-tcp.address=:9000
+      - --accesslog=true
+      - --log.level=DEBUG # DEBUG, INFO, WARN, ERROR, FATAL, PANIC
+    healthcheck:
+      test: [ "CMD-SHELL", "traefik healthcheck --ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+    volumes:
+      - ./config/traefik:/etc/traefik
+    networks:
+      - udc
+    depends_on:
+      clickhouse0:
+        condition: service_healthy
+      clickhouse1:
+        condition: service_healthy
+      clickhouse2:
+        condition: service_healthy
+      clickhouse3:
+        condition: service_healthy
+    restart: on-failure
+
+volumes:
+  clickhouse0-data:
+    name: "clickhouse0-data"
+  clickhouse0-log:
+    name: "clickhouse0-log"
+  clickhouse1-data:
+    name: "clickhouse1-data"
+  clickhouse1-log:
+    name: "clickhouse1-log"
+  clickhouse2-data:
+    name: "clickhouse2-data"
+  clickhouse2-log:
+    name: "clickhouse2-log"
+  clickhouse3-data:
+    name: "clickhouse3-data"
+  clickhouse3-log:
+    name: "clickhouse3-log"
+
+networks:
+  udc:
+    name: udc
+    ipam:
+      config:
+        - subnet: 172.23.0.0/24

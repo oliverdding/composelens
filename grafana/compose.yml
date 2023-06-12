@@ -1,0 +1,72 @@
+name: udc-grafana
+services:
+  grafana:
+    image: grafana/grafana:7.5.17
+    container_name: grafana
+    hostname: grafana
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/grafana/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    environment:
+      GF_INSTALL_PLUGINS: "grafana-clickhouse-datasource 1.1.2"
+      GF_SERVER_ENABLE_GZIP: "true"
+      GF_SERVER_ROOT_URL: "%(protocol)s://%(domain)s:%(http_port)s/grafana/"
+      GF_SERVER_SERVE_FROM_SUB_PATH: "true"
+      GF_DATABASE_PATH: "grafana.db"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+      GF_SECURITY_ADMIN_USER: "admin"
+      GF_SECURITY_ADMIN_PASSWORD: "123456"
+      GF_SECURITY_ALLOW_EMBEDDING: "true"
+      GF_SNAPSHOTS_EXTERNAL_ENABLED: "false"
+      GF_ALERTING_ENABLED: "false"
+    volumes:
+      - ./config/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./config/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    networks:
+      - udc
+
+  grafana-proxy:
+    image: traefik:latest
+    container_name: grafana-proxy
+    hostname: grafana-proxy
+    ports:
+      - "80:80"
+      - "8080:8080"
+    command:
+      - --ping=true
+      - --api.dashboard=true
+      - --api.insecure=true
+      - --providers.file.directory=/etc/traefik
+      - --providers.file.watch=true
+      - --entrypoints.web.address=:80
+      - --accesslog=true
+      - --log.level=DEBUG # DEBUG, INFO, WARN, ERROR, FATAL, PANIC
+    healthcheck:
+      test: [ "CMD-SHELL", "traefik healthcheck --ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+    volumes:
+      - ./config/traefik:/etc/traefik
+    networks:
+      - udc
+    depends_on:
+      grafana:
+        condition: service_healthy
+    restart: on-failure
+
+volumes:
+  grafana-data:
+    name: grafana-data
+
+networks:
+  udc:
+    name: udc
+    ipam:
+      config:
+        - subnet: 172.23.0.0/24
