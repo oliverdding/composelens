@@ -5,7 +5,7 @@ x-clickhouse-deploy-resources: &clickhouse-deploy-resources
           cpus: '4'
           memory: 10G
 
-name: udc-clickhouse
+name: composelens-clickhouse
 services:
   clickhouse0:
     image: 'docker.io/clickhouse/clickhouse-server:23.4-alpine'
@@ -24,7 +24,7 @@ services:
       retries: 10
       start_period: 5s
     networks:
-      - udc
+      - composelens
     environment:
       CLICKHOUSE_SERVER_ID: 0
       CLICKHOUSE_SHARD: 0
@@ -60,7 +60,7 @@ services:
       retries: 10
       start_period: 5s
     networks:
-      - udc
+      - composelens
     environment:
       CLICKHOUSE_SERVER_ID: 1
       CLICKHOUSE_SHARD: 0
@@ -96,7 +96,7 @@ services:
       retries: 10
       start_period: 5s
     networks:
-      - udc
+      - composelens
     environment:
       CLICKHOUSE_SERVER_ID: 2
       CLICKHOUSE_SHARD: 1
@@ -132,7 +132,7 @@ services:
       retries: 10
       start_period: 5s
     networks:
-      - udc
+      - composelens
     environment:
       CLICKHOUSE_SERVER_ID: 3
       CLICKHOUSE_SHARD: 1
@@ -178,7 +178,7 @@ services:
     volumes:
       - ./config/traefik:/etc/traefik
     networks:
-      - udc
+      - composelens
     depends_on:
       clickhouse0:
         condition: service_healthy
@@ -209,8 +209,8 @@ volumes:
     name: "clickhouse3-log"
 
 networks:
-  udc:
-    name: udc
+  composelens:
+    name: composelens
     ipam:
       config:
         - subnet: 172.23.0.0/24

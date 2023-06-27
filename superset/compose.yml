@@ -1,0 +1,22 @@
+name: composelens-superset
+services:
+  superset:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: superset
+    user: root
+    environment:
+      - ADMIN_USERNAME=charmer
+      - ADMIN_FIRSTNAME=Oliver
+      - ADMIN_LASTNAME=Ding
+      - ADMIN_EMAIL=oliverdding@outlook.com
+      - ADMIN_PASSWORD=password
+    volumes:
+      - superset-data:/data
+    ports:
+      - '8088:8088'
+
+volumes:
+  superset-data:
+    name: "superset-data"

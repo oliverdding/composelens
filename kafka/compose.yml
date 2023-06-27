@@ -1,4 +1,4 @@
-name: udc-kafka
+name: composelens-kafka
 services:
   kafka0:
     image: confluentinc/cp-kafka:7.4.0
@@ -34,7 +34,7 @@ services:
     volumes:
       - kafka0-data:/var/lib/kafka/data
     networks:
-      - udc
+      - composelens
   kafka1:
     image: confluentinc/cp-kafka:7.4.0
     hostname: kafka1
@@ -69,7 +69,7 @@ services:
     volumes:
       - kafka1-data:/var/lib/kafka/data
     networks:
-      - udc
+      - composelens
   kafka2:
     image: confluentinc/cp-kafka:7.4.0
     hostname: kafka2
@@ -104,7 +104,7 @@ services:
     volumes:
       - kafka2-data:/var/lib/kafka/data
     networks:
-      - udc
+      - composelens
 
   kafka-proxy:
     image: traefik:latest
@@ -132,7 +132,7 @@ services:
     volumes:
       - ./config/traefik:/etc/traefik
     networks:
-      - udc
+      - composelens
     depends_on:
       kafka0:
         condition: service_healthy
@@ -157,7 +157,7 @@ services:
       kafka2:
         condition: service_healthy
     networks:
-      - udc
+      - composelens
 
 volumes:
   kafka0-data:
@@ -168,8 +168,8 @@ volumes:
     name: "kafka02-data"
 
 networks:
-  udc:
-    name: udc
+  composelens:
+    name: composelens
     ipam:
       config:
         - subnet: 172.23.0.0/24

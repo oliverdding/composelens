@@ -1,4 +1,4 @@
-name: udc-grafana
+name: composelens-grafana
 services:
   grafana:
     image: grafana/grafana:7.5.17
@@ -28,7 +28,7 @@ services:
       - ./config/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
       - grafana-data:/var/lib/grafana
     networks:
-      - udc
+      - composelens
 
   grafana-proxy:
     image: traefik:latest
@@ -54,7 +54,7 @@ services:
     volumes:
       - ./config/traefik:/etc/traefik
     networks:
-      - udc
+      - composelens
     depends_on:
       grafana:
         condition: service_healthy
@@ -65,8 +65,8 @@ volumes:
     name: grafana-data
 
 networks:
-  udc:
-    name: udc
+  composelens:
+    name: composelens
     ipam:
       config:
         - subnet: 172.23.0.0/24
