@@ -2,9 +2,9 @@ FROM apache/superset:latest-dev
 
 USER root
 
-RUN pip install clickhouse-connect && \
-    pip install mysqlclient && \
-    pip install psycopg2
+RUN pip install --no-cache-dir clickhouse-connect && \
+    pip install --no-cache-dir mysqlclient && \
+    pip install --no-cache-dir psycopg2
 
 COPY ./script/superset-init.sh /app/superset-init.sh
 
